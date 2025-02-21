@@ -6,10 +6,13 @@
  */
 #include "main.h"
 
+#define GD25_PAGE_PROGRAM				0x02
+#define GD25_READ_DATA_BYTES			0x03
 #define GD25_WRITE_EN 					0x06
 #define GD25_WRITE_DIS 					0x04
 #define GD25_READ_STATUS_REGISTER_1 	0x05
 #define GD25_READ_STATUS_REGISTER_2 	0x35
+#define GD25_ERASE_SECTOR			 	0x20
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -122,14 +125,79 @@ void gd25q16etigr_readManufacturerID(void)
 	HAL_Delay(100);
 }
 
+void gd25q16etigr_readDataBytes(uint32_t address, uint8_t * buff, uint32_t len)
+{
+	uint8_t cmd = GD25_READ_DATA_BYTES;
+	uint8_t addr[3] = {0};
+
+	addr[0] = address & 0xFF;
+	addr[1] = (address >> 8) & 0xFF;
+	addr[2] = (address >> 16) & 0xFF;
+
+	nCS_Pin_Write(GPIO_PIN_RESET);
+	spi_write(&cmd,1);
+	spi_write(addr,3);
+	spi_read(buff, len);
+	nCS_Pin_Write(GPIO_PIN_SET);
+	HAL_Delay(100);
+}
+
+void gd25q16etigr_pageProgram(uint32_t address, uint8_t * buff, uint32_t len)
+{
+	uint8_t cmd = GD25_PAGE_PROGRAM;
+	uint8_t addr[3] = {0};
+
+	addr[0] = address & 0xFF;
+	addr[1] = (address >> 8) & 0xFF;
+	addr[2] = (address >> 16) & 0xFF;
+
+	gd25q16etigr_writeEnable();
+
+	nCS_Pin_Write(GPIO_PIN_RESET);
+	spi_write(&cmd,1);
+	spi_write(addr,3);
+	spi_write(buff, len);
+	nCS_Pin_Write(GPIO_PIN_SET);
+	HAL_Delay(100);
+}
+
+void gd25q16etigr_eraseSector(uint32_t address)
+{
+	uint8_t cmd = GD25_ERASE_SECTOR;
+	uint8_t addr[3] = {0};
+
+	addr[0] = address & 0xFF;
+	addr[1] = (address >> 8) & 0xFF;
+	addr[2] = (address >> 16) & 0xFF;
+
+	gd25q16etigr_writeEnable();
+
+	nCS_Pin_Write(GPIO_PIN_RESET);
+	spi_write(&cmd,1);
+	spi_write(addr,3);
+	nCS_Pin_Write(GPIO_PIN_SET);
+	HAL_Delay(100);
+}
+
+
 void gd25q16etigr_init(void)
 {
+	uint8_t wBuff[256] = {0};
+	uint8_t rBuff[256] = {0};
+	uint32_t addr = 0x00;
 	nCS_Pin_Write(GPIO_PIN_SET);
 	nWP_Pin_Write(GPIO_PIN_SET);
 	HAL_Delay(100);
 
+	wBuff[0] = 'U';
+	wBuff[1] = 'r';
+	wBuff[2] = 'i';
+	wBuff[3] = 'e';
+	wBuff[4] = 'l';
+
 	gd25q16etigr_readStatusRegister();
-	gd25q16etigr_writeEnable();
-	gd25q16etigr_readStatusRegister();
-	gd25q16etigr_writeDisable();
+	gd25q16etigr_eraseSector(addr);
+	gd25q16etigr_pageProgram(addr, wBuff, 5);
+	gd25q16etigr_readDataBytes(addr, rBuff, sizeof(rBuff));
+	HAL_Delay(100);
 }
