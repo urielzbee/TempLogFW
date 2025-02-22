@@ -94,17 +94,29 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  gd25q16etigr_init();
+  uint8_t wBuff[256] = {0};
+  uint8_t rBuff[256] = {0};
+  uint32_t addr = 0x00;
+  wBuff[0] = 'U';
+  wBuff[1] = 'r';
+  wBuff[2] = 'i';
+  wBuff[3] = 'e';
+  wBuff[4] = 'l';
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
-	  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-	  HAL_Delay(600);
-	  gd25q16etigr_init();
+	HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
+	HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+	HAL_Delay(600);
+
+	gd25q16etigr_eraseSector(addr);
+	gd25q16etigr_pageProgram(addr, wBuff, 5);
+	gd25q16etigr_readDataBytes(addr, rBuff, sizeof(rBuff));
+	HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
