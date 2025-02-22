@@ -14,6 +14,8 @@
 #define GD25_ERASE_SECTOR			 	0x20
 #define GD25_READ_STATUS_REGISTER_2 	0x35
 
+#define GD25_PAGE_SIZE		256
+#define GD25_SECTOR_SIZE	4096
 
 extern SPI_HandleTypeDef hspi1;
 
