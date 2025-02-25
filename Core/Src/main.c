@@ -48,7 +48,8 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+volatile uint8_t uart1_rxByte = 0;
+volatile uint8_t uart1_txByte = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,6 +109,8 @@ int main(void)
   wBuff[2] = 'i';
   wBuff[3] = 'e';
   wBuff[4] = 'l';
+
+  HAL_UART_Receive_IT (&huart1, &uart1_rxByte, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -118,11 +121,11 @@ int main(void)
 	HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 	HAL_Delay(600);
 
-	gd25q16etigr_eraseSector(addr);
+	/*gd25q16etigr_eraseSector(addr);
 	gd25q16etigr_pageProgram(addr, wBuff, 5);
 	gd25q16etigr_readDataBytes(addr, rBuff, sizeof(rBuff));
 	HAL_Delay(100);
-	thermistor_readTemp();
+	thermistor_readTemp();*/
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -374,6 +377,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART1)
+    {
+    	uart1_txByte = uart1_rxByte;
+    	HAL_UART_Transmit(&huart1, &uart1_txByte, 1, 100);
+    	HAL_UART_Receive_IT(&huart1, &uart1_rxByte, 1);
+    }
+}
 
 /* USER CODE END 4 */
 
