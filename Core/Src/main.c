@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "gd25q16etigr.h"
 #include "thermistor.h"
+#include "telemetry.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +60,7 @@ static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_ADC_Init(void);
 /* USER CODE BEGIN PFP */
-
+void app_telemetry_command_handler(telemetry_msg rx_msg);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -111,6 +112,7 @@ int main(void)
   wBuff[4] = 'l';
 
   HAL_UART_Receive_IT (&huart1, &uart1_rxByte, 1);
+  telemetry_set_command_handler(app_telemetry_command_handler);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,7 +153,10 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.HSI14CalibrationValue = 16;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
+  RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -161,7 +166,7 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
@@ -382,9 +387,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == USART1)
     {
     	uart1_txByte = uart1_rxByte;
-    	HAL_UART_Transmit(&huart1, &uart1_txByte, 1, 100);
+    	//HAL_UART_Transmit(&huart1, &uart1_txByte, 1, 100);
+    	telemetry_byte_feed(uart1_rxByte);
     	HAL_UART_Receive_IT(&huart1, &uart1_rxByte, 1);
+
     }
+}
+
+void app_telemetry_command_handler(telemetry_msg rx_msg)
+{
+	telemetry_msg_transmit(&rx_msg);
+	return;
 }
 
 /* USER CODE END 4 */
