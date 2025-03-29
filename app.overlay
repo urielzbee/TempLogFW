@@ -1,12 +1,31 @@
 / {
+    chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+	};
+
     aliases {
         led0 = &myled0;
+        led1 = &myled1;
+
+        btn1 = &mybtn1;
     };
 
     leds {
         compatible = "gpio-leds";
         myled0: led_0 {
-            gpios = <&gpioa 12 GPIO_ACTIVE_LOW>;
-             };
-    };
+            gpios = <&gpioa 12 GPIO_ACTIVE_HIGH>;
+        };
+        myled1: led_1 {
+            gpios = <&gpioa 11 GPIO_ACTIVE_HIGH>;
+        };
+    };      
+
+    gpio_keys {
+		compatible = "gpio-keys";
+		mybtn1: btn_1 {
+			gpios = <&gpiob 9 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+	};
 };
