@@ -29,3 +29,13 @@
 		};
 	};
 };
+&i2c2 {
+    status = "okay";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+    tmp1075@48 {
+        compatible = "ti,tmp1075";
+        reg = <0x48>;
+        conversion-rate = <220000>;
+        consecutive-fault-measurements = <4>;
+    };
+};

@@ -8,8 +8,10 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
+#include <zephyr/drivers/sensor.h>
+
 /* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   100
+#define SLEEP_TIME_MS   500
 
 /* The devicetree node identifier for the "led0" alias. */
 #define LED0_NODE DT_ALIAS(led0)
@@ -24,10 +26,14 @@ static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec btn1 = GPIO_DT_SPEC_GET(BTN1_NODE, gpios);
 
+const struct device *const dev = DEVICE_DT_GET_ONE(ti_tmp1075);
+
 int main(void)
 {
 	int ret;
 	bool led_state = true;
+
+	struct sensor_value temp_val;
 
 	if (!gpio_is_ready_dt(&led0)) {
 		return 0;
@@ -38,6 +44,12 @@ int main(void)
 	if (!gpio_is_ready_dt(&btn1)) {
 		return 0;
 	}
+
+	if (!device_is_ready(dev)) {
+		printk("sensor: device not ready.\n");
+		return 0;
+	}
+
 
 	ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
 	if (ret < 0) {
@@ -54,6 +66,8 @@ int main(void)
 		return 0;
 	}
 
+
+
 	while (1) {
 		gpio_pin_toggle_dt(&led0);
 		if(gpio_pin_get_dt(&btn1) == 1)
@@ -67,6 +81,21 @@ int main(void)
 		
 		led_state = !led_state;
 		printf("LED state: %s\n", led_state ? "ON" : "OFF");
+
+		ret = sensor_sample_fetch(dev);
+		if (ret) {
+			printf("sensor_sample_fetch failed ret %d\n", ret);
+			return;
+		}
+
+		ret = sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &temp_val);
+		if (ret) {
+			printf("sensor_channel_get failed ret %d\n", ret);
+			return;
+		}
+
+		printf("Temperature %.6f C\n", sensor_value_to_double(&temp_val));
+
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
