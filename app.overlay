@@ -9,6 +9,8 @@
         led1 = &myled1;
 
         btn1 = &mybtn1;
+
+        rtc1 = &rtc;
     };
 
     leds {
@@ -38,4 +40,17 @@
         conversion-rate = <220000>;
         consecutive-fault-measurements = <4>;
     };
+};
+&rtc {
+    status = "okay";
+    prescaler = <1>;
+    clocks = <&rcc STM32_CLOCK(APB1, 28U)>,
+            <&rcc STM32_SRC_LSE RTC_SEL(1)>;
+};
+
+&clk_lse {
+    status = "okay";
+};
+&clk_lsi {
+    status = "okay";
 };
