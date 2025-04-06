@@ -34,6 +34,8 @@ const struct device *const dev = DEVICE_DT_GET_ONE(ti_tmp1075);
 
 const struct device *const rtc1 = DEVICE_DT_GET(DT_ALIAS(rtc1));
 
+const struct device *const mco = DEVICE_DT_GET(DT_NODELABEL(mco));
+
 struct sensor_value temp_val;
 bool read_data_flag = false;
 
@@ -66,11 +68,11 @@ static int get_date_time(const struct device *rtc)
 
 	ret = rtc_get_time(rtc, &tm);
 	if (ret < 0) {
-		printk("Cannot read date time: %d\n", ret);
+		printf("Cannot read date time: %d\n", ret);
 		return ret;
 	}
 
-	printk("%04d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900,
+	printf("%04d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900,
 	       tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 	return ret;
@@ -128,6 +130,13 @@ int main(void)
 	if (!device_is_ready(rtc1)) {
 		printf("RTC is not ready\n");
 		return 0;
+	}
+
+	if (device_is_ready(mco)) {
+		printk("MCO1 device successfully configured\n");
+	} else {
+		printk("MCO1 device not ready\n");
+		return -1;
 	}
 
 	ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
