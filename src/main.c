@@ -14,6 +14,8 @@
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/sys/util.h>
 
+#include <zephyr/drivers/flash.h>
+
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
@@ -31,6 +33,7 @@ static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec btn1 = GPIO_DT_SPEC_GET(BTN1_NODE, gpios);
 
 const struct device *const dev = DEVICE_DT_GET_ONE(ti_tmp1075);
+const struct device *const flash_dev = DEVICE_DT_GET_ONE(jedec_spi_nor);
 
 const struct device *const rtc1 = DEVICE_DT_GET(DT_ALIAS(rtc1));
 
@@ -132,10 +135,13 @@ int main(void)
 		return 0;
 	}
 
-	if (device_is_ready(mco)) {
-		printk("MCO1 device successfully configured\n");
-	} else {
-		printk("MCO1 device not ready\n");
+	if (!device_is_ready(mco)) {
+		printf("MCO1 device not ready\n");
+		return -1;
+	}
+
+	if (!device_is_ready(flash_dev)) {
+		printf("Flash device not ready\n");
 		return -1;
 	}
 
