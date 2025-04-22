@@ -1,9 +1,0 @@
-source ~/zephyrproject/zephyr/zephyr-env.sh
-source ~/zephyrproject/.venv/bin/activate
-source ~/zephyrproject/zephyr/zephyr-env.sh
-
-west build -b nucleo_f030r8 . -p
-west flash --runner jlink
-
-| 1    | 1     | 1   | 1    | 1      | 1      | 4    | -> 10Byes
-| Year | Month | Day | Hour | Minute | Second | Temp |
