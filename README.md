@@ -6,7 +6,7 @@
 * TMP1075DGK Temperature Sensor.
 
 ## Architecture
-![Temperature Logger Achitecture](docs/architecture.png)
+![Temperature Logger Achitecture](docs/Architecture.png)
 
 ## Getting Started
 Follow the official Zephyr guide [here](https://docs.zephyrproject.org/latest/develop/getting_started/index.html).
