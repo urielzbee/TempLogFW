@@ -5,6 +5,9 @@
 * GD25Q16CSJGR SPI FLASH.
 * TMP1075DGK Temperature Sensor.
 
+## Architecture
+![Temperature Logger Achitecture](docs/architecture.png)
+
 ## Getting Started
 Follow the official Zephyr guide [here](https://docs.zephyrproject.org/latest/develop/getting_started/index.html).
 
