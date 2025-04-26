@@ -97,5 +97,3 @@
     clocks = <&rcc STM32_CLOCK(APB1, 28U)>,
             <&rcc STM32_SRC_LSE RTC_SEL(1)>;
 };
-
-

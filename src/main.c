@@ -10,6 +10,8 @@
 
 #include <zephyr/drivers/flash.h>
 
+#include "sensor_manager.h"
+
 typedef struct 
 {
 	uint32_t magicWord;
@@ -60,10 +62,28 @@ bool read_data_flag = false;
 
 tempLogHeader header = {0};
 
+void hard_fault(void);
+void board_init(void);
 void read_temp(const struct device *dev, struct sensor_value *val);
 void temp_log_init(void);
 void save_log(tempLog log_value);
 void print_logs(void);
+
+void hard_fault(void)
+{
+	while(1)
+	{
+		k_msleep(SLEEP_TIME_MS);
+	}
+}
+void board_init(void)
+{
+	if(!sensor_manager_init(dev))
+	{
+		hard_fault();
+	}
+
+}
 
 static int set_date_time(const struct device *rtc)
 {
@@ -232,10 +252,8 @@ int main(void)
 		return 0;
 	}
 
-	if (!device_is_ready(dev)) {
-		printf("sensor: device not ready.\n");
-		return 0;
-	}
+	board_init();
+	
 	if (!device_is_ready(rtc1)) {
 		printf("RTC is not ready\n");
 		return 0;
