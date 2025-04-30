@@ -83,6 +83,10 @@ void board_init(void)
 		hard_fault();
 	}
 
+	if(!time_service_init(rtc1))
+	{
+		hard_fault();
+	}
 }
 
 static int set_date_time(const struct device *rtc)
@@ -254,10 +258,7 @@ int main(void)
 
 	board_init();
 	
-	if (!device_is_ready(rtc1)) {
-		printf("RTC is not ready\n");
-		return 0;
-	}
+	
 
 	if (!device_is_ready(mco)) {
 		printf("MCO1 device not ready\n");
