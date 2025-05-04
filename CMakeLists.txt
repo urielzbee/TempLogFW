@@ -6,4 +6,5 @@ project(blinky)
 
 target_sources(app PRIVATE src/main.c 
                             src/sensor_manager.c
-                            src/time_service.c)
+                            src/time_service.c
+                            src/telemetry_service.c)

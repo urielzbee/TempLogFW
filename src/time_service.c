@@ -9,6 +9,15 @@ static void time_service_callback(const struct device *dev, uint16_t id, void *u
 int time_service_init(const struct device * rtc)
 {
     int ret;
+	struct rtc_time init_tm = {
+		.tm_year = 2025 - 1900,
+		.tm_mon = 4 - 1,
+		.tm_mday = 18,
+		.tm_hour = 14,
+		.tm_min = 57,
+		.tm_sec = 0,
+	};
+
     // Set RTC Alarm
 	struct rtc_time tm = {
 		.tm_year = 0,
@@ -24,9 +33,9 @@ int time_service_init(const struct device * rtc)
 		return 0;
 	}
 
-    ret = rtc_set_time(rtc, &tm);
+    ret = rtc_set_time(rtc, &init_tm);
 	if (ret < 0) {
-		printf("Cannot write date time: %d\n", ret);
+		printf("Init - Cannot write date time: %d\n", ret);
 		return 0;
 	}
 

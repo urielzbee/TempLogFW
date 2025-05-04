@@ -11,6 +11,8 @@
 #include <zephyr/drivers/flash.h>
 
 #include "sensor_manager.h"
+#include "time_service.h"
+#include "telemetry_service.h"
 
 typedef struct 
 {
@@ -57,6 +59,7 @@ const struct device *const flash_dev = DEVICE_DT_GET_ONE(jedec_spi_nor);
 const struct device *const rtc1 = DEVICE_DT_GET(DT_ALIAS(rtc1));
 
 const struct device *const mco = DEVICE_DT_GET(DT_NODELABEL(mco));
+const struct device *const telemetry_uart = DEVICE_DT_GET(DT_ALIAS(telemetry_uart));
 
 bool read_data_flag = false;
 
@@ -87,6 +90,7 @@ void board_init(void)
 	{
 		hard_fault();
 	}
+	telemetry_service_init(telemetry_uart);
 }
 
 static int set_date_time(const struct device *rtc)

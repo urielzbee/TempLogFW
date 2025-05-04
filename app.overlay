@@ -11,6 +11,8 @@
         btn1 = &mybtn1;
 
         rtc1 = &rtc;
+
+        telemetry-uart = &usart1;
     };
 
     leds {
