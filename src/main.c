@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/drivers/gpio.h>
 
 #include <zephyr/drivers/sensor.h>
@@ -13,6 +14,9 @@
 #include "sensor_manager.h"
 #include "time_service.h"
 #include "telemetry_service.h"
+#include "flash_manager.h"
+
+LOG_MODULE_REGISTER(main);
 
 typedef struct 
 {
@@ -68,12 +72,11 @@ tempLogHeader header = {0};
 void hard_fault(void);
 void board_init(void);
 void read_temp(const struct device *dev, struct sensor_value *val);
-void temp_log_init(void);
-void save_log(tempLog log_value);
 void print_logs(void);
 
 void hard_fault(void)
 {
+	LOG_ERR("HARD FAULT");
 	while(1)
 	{
 		k_msleep(SLEEP_TIME_MS);
@@ -91,6 +94,12 @@ void board_init(void)
 		hard_fault();
 	}
 	telemetry_service_init(telemetry_uart);
+
+	if(!flash_manager_init(flash_dev))
+	{
+		hard_fault();
+	}
+
 }
 
 static int set_date_time(const struct device *rtc)
@@ -107,7 +116,7 @@ static int set_date_time(const struct device *rtc)
 
 	ret = rtc_set_time(rtc, &tm);
 	if (ret < 0) {
-		printf("Cannot write date time: %d\n", ret);
+		LOG_ERR("Cannot write date time: %d", ret);
 		return ret;
 	}
 	return ret;
@@ -119,11 +128,11 @@ static int get_date_time(const struct device *rtc, struct rtc_time *tm)
 
 	ret = rtc_get_time(rtc, tm);
 	if (ret < 0) {
-		printf("Cannot read date time: %d\n", ret);
+		LOG_ERR("Cannot read date time: %d", ret);
 		return ret;
 	}
 
-	printf("%04d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900,
+	LOG_INF("%04d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900,
 	       tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
 	return ret;
@@ -140,100 +149,35 @@ void read_temp(const struct device *dev, struct sensor_value *val)
 	
 	ret = sensor_sample_fetch(dev);
 	if (ret) {
-		printf("sensor_sample_fetch failed ret %d\n", ret);
+		LOG_ERR("sensor_sample_fetch failed ret %d", ret);
 		return;
 	}
 
 	ret = sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, val);
 	if (ret) {
-		printf("sensor_channel_get failed ret %d\n", ret);
+		LOG_ERR("sensor_channel_get failed ret %d", ret);
 		return;
 	}
 
-	printf(", %.2f\n", sensor_value_to_double(val));
-}
-
-void temp_log_init(void)
-{
-	printf("FLASH Read %d \n",flash_read(flash_dev, TEMP_LOG_HEADER_ADDRESS, &header, TEMP_LOG_HEADER_SIZE));
-	printf("Size of templog = %d\n", sizeof(tempLog));
-	
-	if(header.magicWord != TEMP_LOG_MAGIC_WORD)
-	{
-		printf("Magic word not found!!\n");
-		printf("0x%04X\n",header.magicWord);
-		printf("Reinitializaing FLASH\n");
-		printf("FLASH Erase %d \n",flash_erase(flash_dev, TEMP_LOG_HEADER_ADDRESS, TEMP_LOG_ERASE_SIZE));
-		header.magicWord = TEMP_LOG_MAGIC_WORD;
-		header.index = 0x00;
-		printf("FLASH Write %d \n",flash_write(flash_dev, TEMP_LOG_HEADER_ADDRESS, &header, TEMP_LOG_HEADER_SIZE));
-	}
-	else
-	{
-		printf("Magic word found!!\n");
-		printf("Index = %d\n",header.index);
-	}
-	if(gpio_pin_get_dt(&btn1))
-	{
-		printf("Ressetig index\n");
-		header.magicWord = TEMP_LOG_MAGIC_WORD;
-		header.index = 0;
-		flash_write(flash_dev, TEMP_LOG_HEADER_ADDRESS, &header, TEMP_LOG_HEADER_SIZE);
-	}
-}
-
-void save_log(tempLog log_value)
-{
-	uint32_t address = 0;
-	
-	log_value.magicWord = TEMP_LOG_MAGIC_WORD;
-	flash_read(flash_dev, TEMP_LOG_HEADER_ADDRESS, &header, TEMP_LOG_HEADER_SIZE);
-
-	address = TEMP_LOG_START_ADDRESS + (header.index * TEMP_LOG_SIZE);
-
-	/* Validate address overflow */
-	if(address >= TEMP_LOG_CAPACITY)
-	{
-		address = TEMP_LOG_START_ADDRESS;
-		header.index = 0;
-	}
-
-	/* Check if sector start address*/
-	if(address % TEMP_LOG_ERASE_SIZE == 0)
-	{
-		printf("FLASH Erase %d \n",flash_erase(flash_dev, address, TEMP_LOG_ERASE_SIZE));
-	}
-
-	/* Writing log to memory */
-	printf("Saving log in address 0x%04X\n",address);
-	flash_write(flash_dev, address, &log_value, TEMP_LOG_SIZE);
-
-	/* Save header */
-	header.index++;
-	flash_erase(flash_dev, TEMP_LOG_HEADER_ADDRESS, TEMP_LOG_ERASE_SIZE);
-	flash_write(flash_dev, TEMP_LOG_HEADER_ADDRESS, &header, TEMP_LOG_HEADER_SIZE);
-
+	LOG_INF("%.2f", sensor_value_to_double(val));
 }
 
 void print_logs(void)
 {
-	uint32_t address = 0;
 	tempLog temperatureLog;
 
-	flash_read(flash_dev, TEMP_LOG_HEADER_ADDRESS, &header, TEMP_LOG_HEADER_SIZE);
 	for(uint32_t x = 0; x < TEMP_LOG_MAX_LOGS; x++)
 	{
-		address = TEMP_LOG_START_ADDRESS + (x * TEMP_LOG_SIZE);
-		flash_read(flash_dev, address, &temperatureLog, TEMP_LOG_SIZE);
-		if(temperatureLog.magicWord == TEMP_LOG_MAGIC_WORD)
+		flash_manager_read(flash_dev, (uint8_t *)&temperatureLog, x);
+		if(temperatureLog.magicWord == FLASH_MANAGER_MAGIC_WORD)
 		{
-			printf("%04d-%02d-%02d %02d:%02d:%02d", temperatureLog.time.tm_year + 1900,
+			LOG_INF("%04d-%02d-%02d %02d:%02d:%02d", temperatureLog.time.tm_year + 1900,
 				temperatureLog.time.tm_mon + 1, temperatureLog.time.tm_mday, temperatureLog.time.tm_hour, temperatureLog.time.tm_min, temperatureLog.time.tm_sec);
-			printf(", %.2f\n", sensor_value_to_double(&temperatureLog.temp));
+				LOG_INF(", %.2f", sensor_value_to_double(&temperatureLog.temp));
 		}
 		else
 		{
-			printf(".");
+			LOG_INF(".");
 			break;
 		}
 	}
@@ -248,15 +192,15 @@ int main(void)
 	// Initializing devices
 
 	if (!gpio_is_ready_dt(&led0)) {
-		printf("Device is not ready\n");
+		LOG_ERR("Device is not ready");
 		return 0;
 	}
 	if (!gpio_is_ready_dt(&led1)) {
-		printf("Device is not ready\n");
+		LOG_ERR("Device is not ready");
 		return 0;
 	}
 	if (!gpio_is_ready_dt(&btn1)) {
-		printf("Device is not ready\n");
+		LOG_ERR("Device is not ready");
 		return 0;
 	}
 
@@ -265,30 +209,26 @@ int main(void)
 	
 
 	if (!device_is_ready(mco)) {
-		printf("MCO1 device not ready\n");
+		LOG_ERR("MCO1 device not ready");
 		return -1;
 	}
 
-	if (!device_is_ready(flash_dev)) {
-		printf("Flash device not ready\n");
-		return -1;
-	}
 
 	ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
 	if (ret < 0) {
-		printf("Device is not ready\n");
+		LOG_ERR("Device is not ready");
 		return 0;
 	}
 
 	ret = gpio_pin_configure_dt(&led1, GPIO_OUTPUT_ACTIVE);
 	if (ret < 0) {
-		printf("Device is not ready\n");
+		LOG_ERR("Device is not ready");
 		return 0;
 	}
 
 	ret = gpio_pin_configure_dt(&btn1, GPIO_INPUT);
 	if (ret < 0) {
-		printf("Device is not ready\n");
+		LOG_ERR("Device is not ready");
 		return 0;
 	}
 
@@ -308,7 +248,6 @@ int main(void)
 	rtc_alarm_set_callback(rtc1, 0, rtc_callback, NULL);
 
 	tempLog temperatureLog;
-	temp_log_init();
 
 	get_date_time(rtc1, &temperatureLog.time);
 	read_temp(dev, &temperatureLog.temp);
@@ -322,8 +261,9 @@ int main(void)
 		{
 			read_data_flag = false;
 			get_date_time(rtc1, &temperatureLog.time);
-			read_temp(dev, &temperatureLog.temp);
-			save_log(temperatureLog);
+			read_temp(dev, &temperatureLog.temp);	
+			temperatureLog.magicWord = FLASH_MANAGER_MAGIC_WORD;
+			flash_manager_write(flash_dev, &temperatureLog, sizeof(tempLog));
 		}
 		if(gpio_pin_get_dt(&btn1))
 		{

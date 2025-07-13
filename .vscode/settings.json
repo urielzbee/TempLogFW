@@ -20,7 +20,12 @@
         "string_view": "c",
         "flash.h": "c",
         "fs.h": "c",
-        "disk_access.h": "c"
+        "disk_access.h": "c",
+        "telemetry_service.h": "c",
+        "log.h": "c",
+        "uart.h": "c",
+        "time_service.h": "c",
+        "sensor_manager.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

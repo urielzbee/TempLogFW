@@ -10,10 +10,10 @@
       "name": "Debug J-Link",
       "cwd": "${workspaceRoot}",
       "executable": "${workspaceRoot}/build/zephyr/zephyr.elf",
-      "serverpath": "/Applications/SEGGER/JLink_V788j/JLinkGDBServerCLExe",
+      "serverpath": "/usr/bin/JLinkGDBServer",
       "serverArgs": [],
       "servertype": "jlink",
-      "armToolchainPath": "/opt/homebrew/bin",
+      "armToolchainPath": "/usr/bin/",
       "device": "STM32F030C8",
       "interface": "swd",
       "serialNumber": "", //If you have more than one J-Link probe, add the serial number here.
