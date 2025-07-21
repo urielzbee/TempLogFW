@@ -3,7 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**", "~/zephyrproject/zephyr/include"
+                "${workspaceFolder}/**", "~/zephyrproject/zephyr/include", "~/zephyrproject/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/",

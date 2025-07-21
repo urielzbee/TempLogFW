@@ -15,6 +15,7 @@
 #include "time_service.h"
 #include "telemetry_service.h"
 #include "flash_manager.h"
+#include "command_handler.h"
 
 LOG_MODULE_REGISTER(main);
 
@@ -99,6 +100,8 @@ void board_init(void)
 	{
 		hard_fault();
 	}
+
+	command_handler_init();
 
 }
 

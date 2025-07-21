@@ -25,7 +25,8 @@
         "log.h": "c",
         "uart.h": "c",
         "time_service.h": "c",
-        "sensor_manager.h": "c"
+        "sensor_manager.h": "c",
+        "kernel.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }
