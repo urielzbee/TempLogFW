@@ -11,7 +11,7 @@ K_MSGQ_DEFINE(telemetry_service_msgq, sizeof(uint8_t), 64, 1);
 #define TELEMETRY_SERVICE_PRIORITY 7
 #define TELEMETRY_SERVICE_THEAT_INIT_DELAY 1000
 
-#define TELEMETRY_SERVICE_MAX_MESSAGE_SIZE 256
+
 
 #define SYNC_BYTE 0x7E
 
@@ -30,14 +30,8 @@ enum eTelemetryState
 	eCRC_2
 };
 
-typedef struct
-{
-	uint8_t cmd;
-	uint8_t len;
-	uint8_t data[TELEMETRY_SERVICE_MAX_MESSAGE_SIZE];
-}telemetry_msg;
-
 static telemetry_msg rxMsg = {0};
+static telemetry_service_message_callback message_callback = NULL;
 
 /* Private functions  */
 static void serial_cb(const struct device *dev, void *user_data);
@@ -47,15 +41,15 @@ static void telemetry_service(void);
 static void serial_cb(const struct device *dev, void *user_data)
 {
     uint8_t c;
-    if (!uart_irq_update(uart)) {
+    if (!uart_irq_update(dev)) {
 		return;
 	}
 
-	if (!uart_irq_rx_ready(uart)) {
+	if (!uart_irq_rx_ready(dev)) {
 		return;
 	}
 
-    while (uart_fifo_read(uart, &c, 1) == 1) 
+    while (uart_fifo_read(dev, &c, 1) == 1) 
     {
         k_msgq_put(&telemetry_service_msgq, &c, K_NO_WAIT);
     }
@@ -66,7 +60,6 @@ static void telemetry_service_byte_feed(uint8_t rxByte)
     static uint8_t telemetryState = 0;
     static uint16_t dataIndex = 0;
     static uint16_t dataLen = 0;
-
     switch(telemetryState)
 	{
 		case eSYNC_1:
@@ -115,11 +108,11 @@ static void telemetry_service_byte_feed(uint8_t rxByte)
 			break;
 		case eCRC_2:
 			telemetryState = eSYNC_1;
-            LOG_INF("Message received\n");
-			/*if(telemetry_command_handler)
+			// Check CRC here if needed
+			if(message_callback)
 			{
-				telemetry_command_handler(rxMsg);
-			}*/
+				message_callback(&rxMsg);
+			}
 			break;
 		default:
 			telemetryState = eSYNC_1;
@@ -164,6 +157,11 @@ void telemetry_service_init(const struct device * uart_dev)
     
     /* Enable reception interrupt */
     uart_irq_rx_enable(uart);
+}
+
+void telemetry_service_set_message_callback(telemetry_service_message_callback cb)
+{
+    message_callback = cb;
 }
 
 K_THREAD_DEFINE(telemetry_service_id, TELEMETRY_SERVICE_STACKSIZE, telemetry_service, NULL, NULL, NULL,
