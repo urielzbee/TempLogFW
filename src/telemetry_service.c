@@ -3,6 +3,7 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/ring_buffer.h>
 
 LOG_MODULE_REGISTER(telemetry);
 K_MSGQ_DEFINE(telemetry_service_msgq, sizeof(uint8_t), 64, 1);
@@ -11,11 +12,8 @@ K_MSGQ_DEFINE(telemetry_service_msgq, sizeof(uint8_t), 64, 1);
 #define TELEMETRY_SERVICE_PRIORITY 7
 #define TELEMETRY_SERVICE_THEAT_INIT_DELAY 1000
 
-
-
 #define SYNC_BYTE 0x7E
 
-#define RX_CHUNK_LEN 32
 
 struct device * uart;
 
@@ -31,6 +29,11 @@ enum eTelemetryState
 };
 
 static telemetry_msg rxMsg = {0};
+
+static uint8_t tx_buff[2 + sizeof(telemetry_msg) + 2] = {0};
+static uint16_t tx_len = 0;
+struct ring_buf tx_ringbuf;
+
 static telemetry_service_message_callback message_callback = NULL;
 
 /* Private functions  */
@@ -40,19 +43,30 @@ static void telemetry_service(void);
 
 static void serial_cb(const struct device *dev, void *user_data)
 {
-    uint8_t c;
-    if (!uart_irq_update(dev)) {
-		return;
-	}
+	uint8_t c;
+	
+	while (uart_irq_update(dev) && uart_irq_is_pending(dev)) 
+	{
+		if(uart_irq_rx_ready(dev)) 
+		{
+			// Read data from the UART
+			if (uart_fifo_read(dev, &c, 1) == 1) {
+				k_msgq_put(&telemetry_service_msgq, &c, K_NO_WAIT);
+			}
+			continue;
+		}
+		if (uart_irq_tx_ready(dev)) {
 
-	if (!uart_irq_rx_ready(dev)) {
-		return;
+			int rb_len;
+			rb_len = ring_buf_get(&tx_ringbuf, &c, 1);
+			if (!rb_len) {
+				LOG_DBG("Ring buffer empty, disable TX IRQ");
+				uart_irq_tx_disable(dev);
+				continue;
+			}
+			uart_fifo_fill(dev, &c, rb_len);
+		}
 	}
-
-    while (uart_fifo_read(dev, &c, 1) == 1) 
-    {
-        k_msgq_put(&telemetry_service_msgq, &c, K_NO_WAIT);
-    }
 }
 
 static void telemetry_service_byte_feed(uint8_t rxByte)
@@ -154,14 +168,38 @@ void telemetry_service_init(const struct device * uart_dev)
         LOG_WRN("UART CALLBACK SET: %d",ret);
         return 0;
     }
-    
+
+	ring_buf_init(&tx_ringbuf, sizeof(tx_buff), tx_buff);
+
     /* Enable reception interrupt */
     uart_irq_rx_enable(uart);
+
+	uart_irq_tx_disable(uart);
 }
 
 void telemetry_service_set_message_callback(telemetry_service_message_callback cb)
 {
     message_callback = cb;
+}
+
+void telemetry_service_response(telemetry_msg * msg)
+{
+	
+	int ret;
+	tx_buff[0] = SYNC_BYTE; // Start byte
+	tx_buff[1] = SYNC_BYTE; // End byte
+	tx_buff[2] = msg->cmd; // Command
+	tx_buff[3] = msg->len; // Length
+	if (msg->len > 0) {
+		memcpy(&tx_buff[4], msg->data, msg->len); // Data
+	}
+	tx_buff[4 + msg->len] = 0; // CRC placeholder, can be replaced with actual CRC calculation
+	tx_buff[5 + msg->len] = 0; // CRC placeholder, can be replaced with actual CRC calculation
+	tx_len = 6 + msg->len; // Total length of the message
+
+	ring_buf_put(&tx_ringbuf, tx_buff, tx_len);
+
+	uart_irq_tx_enable(uart); // Enable TX interrupt
 }
 
 K_THREAD_DEFINE(telemetry_service_id, TELEMETRY_SERVICE_STACKSIZE, telemetry_service, NULL, NULL, NULL,

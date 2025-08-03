@@ -16,5 +16,6 @@ typedef void (*telemetry_service_message_callback)(telemetry_msg *msg);
 
 void telemetry_service_init(const struct device * uart_dev);
 void telemetry_service_set_message_callback(telemetry_service_message_callback cb);
+void telemetry_service_response(telemetry_msg * msg);
 
 #endif

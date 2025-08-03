@@ -12,7 +12,7 @@ enum eCMDs
 	eHW_VER,
 	eSET_TIME,
 	eGET_TIME,
-	eCPU_TIME,
+	eCPU_TEMP,
 	eTEMP,
 	eSET_LOG_INTERVAL,
     eGET_LOG_INTERVAL,
@@ -46,8 +46,8 @@ static void command_handler_process(const telemetry_msg *msg)
     case eGET_TIME :
         LOG_INF("Get Time Command");
         break;
-    case eCPU_TIME :
-        LOG_INF("CPU Time Command");
+    case eCPU_TEMP :
+        LOG_INF("CPU Temp Command");
         break;
     case eTEMP :
         LOG_INF("Temperature Command");
@@ -64,6 +64,11 @@ static void command_handler_process(const telemetry_msg *msg)
     default:
         break;
     }
+    telemetry_msg response_msg;
+    response_msg.cmd = msg->cmd;
+    response_msg.len = 1; // Set length to 0 for now, can be updated later
+    response_msg.data[0] = 0xAA; // ACK
+    telemetry_service_response(&response_msg);
 }
 
 void command_handler_init(void)
