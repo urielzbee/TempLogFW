@@ -36,7 +36,11 @@ static void command_handler_process(const telemetry_msg *msg)
         response_msg.data[2] = CONFIG_TL_FW_VER_REV;
         break;
     case eHW_VER :
-        LOG_INF("Hardware Version: 1.0.0");
+        LOG_INF("Hardware Version: %d.%d.%d", CONFIG_TL_HW_VER_MAJOR, CONFIG_TL_HW_VER_MINOR, CONFIG_TL_HW_VER_REV);
+        response_msg.len = 3;
+        response_msg.data[0] = CONFIG_TL_HW_VER_MAJOR;
+        response_msg.data[1] = CONFIG_TL_HW_VER_MINOR;
+        response_msg.data[2] = CONFIG_TL_HW_VER_REV;
         break;
     case eSET_TIME :
         LOG_INF("Set Time Command");

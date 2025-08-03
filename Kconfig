@@ -1,5 +1,6 @@
 source "Kconfig.zephyr"
 
+# Firmware Version Configuration
 config TL_FW_VER_MAJOR
     int "Firmware major version"
     default 0
@@ -10,4 +11,17 @@ config TL_FW_VER_MINOR
 
 config TL_FW_VER_REV
     int "Firmware revision"
+    default 0
+
+# Hardware Version Configuration
+config TL_HW_VER_MAJOR
+    int "Hardware major version"
+    default 0
+
+config TL_HW_VER_MINOR
+    int "Hardware minor version"
+    default 1
+
+config TL_HW_VER_REV
+    int "Hardware revision"
     default 0
