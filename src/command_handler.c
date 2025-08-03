@@ -21,12 +21,19 @@ enum eCMDs
 
 static void command_handler_process(const telemetry_msg *msg)
 {
+    telemetry_msg response_msg;
+    response_msg.cmd = msg->cmd;
+
     // Process the telemetry message
     LOG_INF("Message received: cmd=0x%02X, len=%d", msg->cmd, msg->len);
     switch (msg->cmd)
     {
     case eFW_VER :
-        LOG_INF("Firmware Version: 1.0.0");
+        LOG_INF("Firmware Version: %d.%d.%d", CONFIG_TL_FW_VER_MAJOR, CONFIG_TL_FW_VER_MINOR, CONFIG_TL_FW_VER_REV);
+        response_msg.len = 3;
+        response_msg.data[0] = CONFIG_TL_FW_VER_MAJOR;
+        response_msg.data[1] = CONFIG_TL_FW_VER_MINOR;
+        response_msg.data[2] = CONFIG_TL_FW_VER_REV;
         break;
     case eHW_VER :
         LOG_INF("Hardware Version: 1.0.0");
@@ -64,10 +71,7 @@ static void command_handler_process(const telemetry_msg *msg)
     default:
         break;
     }
-    telemetry_msg response_msg;
-    response_msg.cmd = msg->cmd;
-    response_msg.len = 1; // Set length to 0 for now, can be updated later
-    response_msg.data[0] = 0xAA; // ACK
+    
     telemetry_service_response(&response_msg);
 }
 
