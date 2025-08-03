@@ -6,6 +6,8 @@
 
 LOG_MODULE_REGISTER(cmd_Handler);
 
+static struct rtc_time tm = {0};
+
 enum eCMDs
 {
 	eFW_VER = 0x01,
@@ -44,18 +46,33 @@ static void command_handler_process(const telemetry_msg *msg)
         break;
     case eSET_TIME :
         LOG_INF("Set Time Command");
-        struct rtc_time tm = {
-            .tm_year = 2000 + msg->data[0] - 1900,
-            .tm_mon = msg->data[1] - 1,
-            .tm_mday = msg->data[2],
-            .tm_hour = msg->data[3],
-            .tm_min = msg->data[4],
-            .tm_sec = msg->data[5],
-        };
+        memset(&tm, 0, sizeof(tm));
+
+        tm.tm_year = msg->data[0] + 100;
+        tm.tm_mon = msg->data[1] - 1;
+        tm.tm_mday = msg->data[2];
+        tm.tm_hour = msg->data[3];
+        tm.tm_min = msg->data[4];
+        tm.tm_sec = msg->data[5];
+
         time_service_set_date_time(&tm);
         break;
     case eGET_TIME :
-        LOG_INF("Get Time Command");
+        
+        memset(&tm, 0, sizeof(tm));
+        time_service_get_date_time(&tm);
+
+        LOG_INF("Get Time Command: %04d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900,
+	       tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+        
+        response_msg.len = 6;
+        response_msg.data[0] = tm.tm_year - 100;
+        response_msg.data[1] = tm.tm_mon; // Month (1-12)
+        response_msg.data[2] = tm.tm_mday; // Day of the month (1-31)
+        response_msg.data[3] = tm.tm_hour; // Hour (0-23)
+        response_msg.data[4] = tm.tm_min; // Minute (0-59)
+        response_msg.data[5] = tm.tm_sec; // Second (0-59)
+
         break;
     case eCPU_TEMP :
         LOG_INF("CPU Temp Command");
