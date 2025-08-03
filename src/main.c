@@ -72,7 +72,6 @@ tempLogHeader header = {0};
 
 void hard_fault(void);
 void board_init(void);
-void read_temp(const struct device *dev, struct sensor_value *val);
 void print_logs(void);
 
 void hard_fault(void)
@@ -144,25 +143,6 @@ static int get_date_time(const struct device *rtc, struct rtc_time *tm)
 void rtc_callback(const struct device *dev, uint16_t id, void *user_data)
 {
 	read_data_flag = true;
-}
-
-void read_temp(const struct device *dev, struct sensor_value *val)
-{
-	int ret;
-	
-	ret = sensor_sample_fetch(dev);
-	if (ret) {
-		LOG_ERR("sensor_sample_fetch failed ret %d", ret);
-		return;
-	}
-
-	ret = sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, val);
-	if (ret) {
-		LOG_ERR("sensor_channel_get failed ret %d", ret);
-		return;
-	}
-
-	LOG_INF("%.2f", sensor_value_to_double(val));
 }
 
 void print_logs(void)
@@ -253,7 +233,7 @@ int main(void)
 	tempLog temperatureLog;
 
 	get_date_time(rtc1, &temperatureLog.time);
-	read_temp(dev, &temperatureLog.temp);
+	sensor_manager_read(&temperatureLog.temp);
 	//gpio_pin_set_dt(&led0, 0);
 	//gpio_pin_set_dt(&led1, 0);
 	while (1) {
@@ -264,7 +244,7 @@ int main(void)
 		{
 			read_data_flag = false;
 			get_date_time(rtc1, &temperatureLog.time);
-			read_temp(dev, &temperatureLog.temp);	
+			sensor_manager_read(&temperatureLog.temp);	
 			temperatureLog.magicWord = FLASH_MANAGER_MAGIC_WORD;
 			flash_manager_write(flash_dev, &temperatureLog, sizeof(tempLog));
 		}

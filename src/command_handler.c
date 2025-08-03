@@ -3,6 +3,7 @@
 #include "command_handler.h"
 #include "telemetry_service.h"
 #include "time_service.h"
+#include "sensor_manager.h"
 
 LOG_MODULE_REGISTER(cmd_Handler);
 
@@ -78,7 +79,12 @@ static void command_handler_process(const telemetry_msg *msg)
         LOG_INF("CPU Temp Command");
         break;
     case eTEMP :
-        LOG_INF("Temperature Command");
+        double temp;
+        sensor_manager_read(&temp);
+        LOG_INF("Temperature Command: %.2f", temp);
+        response_msg.len = 1;
+        response_msg.data[0] = (uint8_t)temp;
+
         break;
     case eSET_LOG_INTERVAL :
         LOG_INF("Set Log Interval Command");

@@ -5,6 +5,6 @@
 
 int sensor_manager_init(const struct device * dev);
 
-int sensor_manager_read(const struct device * dev, double * temp);
+int sensor_manager_read(double * temp);
 
 #endif
