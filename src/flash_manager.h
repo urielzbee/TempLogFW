@@ -5,10 +5,10 @@
 
 #define FLASH_MANAGER_MAGIC_WORD        0xBADDCAFE
 
-int flash_manager_init(const struct device * flash_dev);
-int flash_manager_erase(const struct device * flash_dev);
-int flash_manager_write(const struct device * flash_dev, uint8_t *  data, uint32_t len);
-int flash_manager_read(const struct device * flash_dev, uint8_t *  data, uint32_t index);
+int flash_manager_init(const struct device * dev);
+int flash_manager_erase(void);
+int flash_manager_write(uint8_t *  data, uint32_t len);
+int flash_manager_read(uint8_t *  data, uint32_t index);
 
 
 #endif

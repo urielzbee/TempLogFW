@@ -22,10 +22,12 @@ typedef struct
 #define FLASH_MANAGER_MAX_LOGS          ((FLASH_MANAGER_LOG_CAPACITY - FLASH_MANAGER_START_ADDRESS) / FLASH_MANAGER_HEADER_SIZE)
 
 static flash_manager_header header = {0};
+static const struct device * flash_dev = NULL;
 
-int flash_manager_init(const struct device * flash_dev)
+int flash_manager_init(const struct device * dev)
 {
     int ret;
+    flash_dev = dev;
     if (!device_is_ready(flash_dev)) {
 		LOG_ERR("Device not ready");
 		return 0;
@@ -41,7 +43,7 @@ int flash_manager_init(const struct device * flash_dev)
     if(header.magicWord != FLASH_MANAGER_MAGIC_WORD)
 	{
         LOG_INF("Magic word not found!!");
-        flash_manager_erase(flash_dev);
+        flash_manager_erase();
     }
     else
     {
@@ -50,7 +52,7 @@ int flash_manager_init(const struct device * flash_dev)
 
     return 1;
 }
-int flash_manager_erase(const struct device * flash_dev)
+int flash_manager_erase(void)
 {
     LOG_INF("Formating");
     flash_erase(flash_dev, FLASH_MANAGER_HEADER_ADDRESS, FLASH_MANAGER_ERASE_SIZE);
@@ -59,7 +61,7 @@ int flash_manager_erase(const struct device * flash_dev)
     flash_write(flash_dev, FLASH_MANAGER_HEADER_ADDRESS, &header, FLASH_MANAGER_ERASE_SIZE);
 }
 
-int flash_manager_write(const struct device * flash_dev, uint8_t * data, uint32_t len)
+int flash_manager_write(uint8_t * data, uint32_t len)
 {
     uint32_t address = 0;
 
@@ -94,7 +96,7 @@ int flash_manager_write(const struct device * flash_dev, uint8_t * data, uint32_
     return 1;
 }
 
-int flash_manager_read(const struct device * flash_dev, uint8_t *  data, uint32_t index)
+int flash_manager_read(uint8_t *  data, uint32_t index)
 {
     int address = 0;
 
