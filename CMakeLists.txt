@@ -9,4 +9,5 @@ target_sources(app PRIVATE src/main.c
                             src/time_service.c
                             src/telemetry_service.c
                             src/flash_manager.c
-                            src/command_handler.c)
+                            src/command_handler.c
+                            src/temperature_logger_controller.c)
