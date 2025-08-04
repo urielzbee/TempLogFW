@@ -89,3 +89,25 @@ int time_service_get_date_time( struct rtc_time *tm)
 
 	return ret;
 }
+
+int time_service_alarm_set_time( uint16_t id, uint16_t mask, const struct rtc_time * timeptr)
+{
+	int ret = 0;
+
+	ret = rtc_alarm_set_time(time_rtc, id, mask, timeptr);
+	if (ret < 0) {
+		LOG_INF("Cannot set alarm time: %d\n", ret);
+		return ret;
+	}
+
+	return ret;
+}
+
+int time_service_alarm_set_callback( uint16_t id, rtc_alarm_callback cb, void *user_data)
+{
+	if (rtc_alarm_set_callback(time_rtc, id, cb, user_data) < 0) {
+		LOG_INF("Cannot set alarm callback\n");
+		return -1;
+	}
+	return 0;
+}
