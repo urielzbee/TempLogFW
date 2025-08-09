@@ -95,6 +95,11 @@ static void command_handler_process(const telemetry_msg *msg)
         break;
     case eGET_LOG_INTERVAL :
         LOG_INF("Get Log Interval Command");
+        uint16_t current_log_interval = 0;
+        current_log_interval = temperature_logger_controller_get_log_interval();
+        response_msg.len = 2;
+        response_msg.data[0] = (current_log_interval >> 8) & 0xFF; // High byte
+        response_msg.data[1] = current_log_interval & 0xFF; // Low byte
         break;
     case eSTREAM_LOGS :
         LOG_INF("Stream Logs Command");

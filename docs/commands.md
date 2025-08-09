@@ -125,7 +125,7 @@ Get Logging interval time
 **Response**
 |Sync bytes|Command|Data Length|Data      |CRC    |
 |----------|-------|-----------|----------|-------|
-|0x7E, 0x7E|0x08   |0x00       |[Seconds] |2 bytes|
+|0x7E, 0x7E|0x08   |0x02       |[Minutes] |2 bytes|
 
 ## STREAM_LOGS
 Stream log files stored   

@@ -109,6 +109,11 @@ void temperature_logger_controller_set_log_interval(uint16_t interval) {
 	set_next_alarm_time(log_interval);
 }
 
+uint16_t temperature_logger_controller_get_log_interval(void) {
+	LOG_INF("Getting log interval: %u min", log_interval);
+	return log_interval;
+}
+
 static void temperature_logger_controller(void)
 {
     tempLog temperatureLog;
