@@ -4,6 +4,7 @@
 #include "telemetry_service.h"
 #include "time_service.h"
 #include "sensor_manager.h"
+#include "temperature_logger_controller.h"
 
 LOG_MODULE_REGISTER(cmd_Handler);
 
@@ -26,6 +27,7 @@ static void command_handler_process(const telemetry_msg *msg)
 {
     telemetry_msg response_msg;
     response_msg.cmd = msg->cmd;
+    response_msg.len = 0; // Default length is 0
 
     // Process the telemetry message
     LOG_INF("Message received: cmd=0x%02X, len=%d", msg->cmd, msg->len);
@@ -87,7 +89,9 @@ static void command_handler_process(const telemetry_msg *msg)
 
         break;
     case eSET_LOG_INTERVAL :
+        uint16_t log_interval = (msg->data[0] << 8) | msg->data[1]; // Combine two bytes into a uint16_t
         LOG_INF("Set Log Interval Command");
+        temperature_logger_controller_set_log_interval(log_interval); // Combine two bytes into a uint16_t
         break;
     case eGET_LOG_INTERVAL :
         LOG_INF("Get Log Interval Command");

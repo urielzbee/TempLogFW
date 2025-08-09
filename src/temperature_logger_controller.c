@@ -44,8 +44,10 @@ typedef struct
 
 bool read_data_flag = false;
 tempLogHeader header = {0};
+static uint16_t log_interval = 1; // Default log interval in seconds
 
 static void temperature_logger_controller(void);
+static void set_next_alarm_time(int16_t interval);
 
 static void time_service_callback(const struct device *dev, uint16_t id, void *user_data)
 {
@@ -83,15 +85,7 @@ void temperature_logger_controller_init(void) {
 	}
 
     // Set RTC Alarm
-	struct rtc_time tm_alarm = {
-		.tm_year = 0,
-		.tm_mon = 0,
-		.tm_mday = 0,
-		.tm_hour = 0,
-		.tm_min = 0,
-		.tm_sec = 0,
-	};
-	time_service_alarm_set_time(0, RTC_ALARM_TIME_MASK_SECOND, &tm_alarm);
+	set_next_alarm_time(log_interval);
 	time_service_alarm_set_callback(0, time_service_callback, NULL);
 }
 
@@ -109,6 +103,12 @@ void temperature_logger_controller_stop(void) {
     }
 }
 
+void temperature_logger_controller_set_log_interval(uint16_t interval) {
+	LOG_INF("Setting log interval to %u min", interval);
+	log_interval = interval;
+	set_next_alarm_time(log_interval);
+}
+
 static void temperature_logger_controller(void)
 {
     tempLog temperatureLog;
@@ -121,6 +121,7 @@ static void temperature_logger_controller(void)
 		{
             LOG_INF("Read data flag set, logging temperature data");
 			read_data_flag = false;
+			set_next_alarm_time(log_interval);
 			time_service_get_date_time(&temperatureLog.time);
 			sensor_manager_read(&temperatureLog.temp);
 			temperatureLog.magicWord = FLASH_MANAGER_MAGIC_WORD;
@@ -128,5 +129,24 @@ static void temperature_logger_controller(void)
 		}
 		k_msleep(1000);
 	}
+}
+
+static void set_next_alarm_time(int16_t interval)
+{
+	struct rtc_time tm_alarm = {
+		.tm_year = 0,
+		.tm_mon = 0,
+		.tm_mday = 0,
+		.tm_hour = 0,
+		.tm_min = 0,
+		.tm_sec = 0,
+	};
+	time_service_get_date_time(&tm_alarm);
+	tm_alarm.tm_min += interval;
+	if (tm_alarm.tm_min >= 60) {
+		tm_alarm.tm_hour += tm_alarm.tm_min / 60;
+		tm_alarm.tm_min %= 60;
+	}
+	time_service_alarm_set_time(0, RTC_ALARM_TIME_MASK_MINUTE | RTC_ALARM_TIME_MASK_SECOND, &tm_alarm);
 }
 

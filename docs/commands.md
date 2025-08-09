@@ -107,7 +107,7 @@ Set Logging interval time
 **Request**
 |Sync bytes|Command|Data Length|Data         |CRC    |
 |----------|-------|-----------|-------------|-------|
-|0x7E, 0x7E|0x07   |0x02       |[Seconds]    |2 bytes|
+|0x7E, 0x7E|0x07   |0x02       |[Minutes]    |2 bytes|
 
 **Response**
 |Sync bytes|Command|Data Length|Data      |CRC    |
