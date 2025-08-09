@@ -8,6 +8,8 @@
 
 LOG_MODULE_REGISTER(cmd_Handler);
 
+static void stream_logs(void);
+
 static struct rtc_time tm = {0};
 
 enum eCMDs
@@ -103,12 +105,48 @@ static void command_handler_process(const telemetry_msg *msg)
         break;
     case eSTREAM_LOGS :
         LOG_INF("Stream Logs Command");
+        stream_logs();
         break;
     default:
         break;
     }
     
     telemetry_service_response(&response_msg);
+}
+
+static void stream_logs(void)
+{
+    telemetry_msg response_msg;
+    response_msg.cmd = eSTREAM_LOGS;
+    tempLog temperatureLog;
+    response_msg.len = 8;
+
+	for(uint32_t x = 0; x < TEMP_LOG_MAX_LOGS; x++)
+	{
+		flash_manager_read((uint8_t *)&temperatureLog, x);
+		if(temperatureLog.magicWord == TEMP_LOG_MAGIC_WORD)
+		{
+			LOG_INF("%04d-%02d-%02d %02d:%02d:%02d", temperatureLog.time.tm_year + 1900,
+				temperatureLog.time.tm_mon + 1, temperatureLog.time.tm_mday, temperatureLog.time.tm_hour, temperatureLog.time.tm_min, temperatureLog.time.tm_sec);
+				LOG_INF(", %.2f", sensor_value_to_double(&temperatureLog.temp));
+            response_msg.data[0] = temperatureLog.time.tm_year - 100; // Year - 2000
+            response_msg.data[1] = temperatureLog.time.tm_mon + 1;
+            response_msg.data[2] = temperatureLog.time.tm_mday;
+            response_msg.data[3] = temperatureLog.time.tm_hour;
+            response_msg.data[4] = temperatureLog.time.tm_min;
+            response_msg.data[5] = temperatureLog.time.tm_sec;
+            response_msg.data[6] = 0x00; // Type
+            response_msg.data[7] = (uint8_t)sensor_value_to_double(&temperatureLog.temp);
+            
+            telemetry_service_response(&response_msg);
+            k_msleep(50); // Small delay to ensure the message is sent before sending the next one
+		}
+		else
+		{
+			LOG_INF(".");
+			break;
+		}
+	}
 }
 
 void command_handler_init(void)

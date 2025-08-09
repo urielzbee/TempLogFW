@@ -19,29 +19,6 @@ K_THREAD_STACK_DEFINE(temp_log_stack, TEMPERATURE_LOGGER_CONTROLLER_STACKSIZE);
 static struct k_thread temp_log_thread;
 static k_tid_t temp_log_tid = NULL;
 
-typedef struct 
-{
-	uint32_t magicWord;
-	uint32_t index;
-}tempLogHeader;
-
-typedef struct 
-{
-	uint32_t magicWord;
-	struct rtc_time time;
-	struct sensor_value temp;
-	uint8_t reserved[12];
-}tempLog;
-
-#define TEMP_LOG_HEADER_ADDRESS 0x00000000
-#define TEMP_LOG_START_ADDRESS 0x1000
-#define TEMP_LOG_ERASE_SIZE 0x1000
-#define TEMP_LOG_CAPACITY 0x200000 /* 2MBytes */
-#define TEMP_LOG_SIZE sizeof(tempLog)
-#define TEMP_LOG_HEADER_SIZE sizeof(tempLogHeader)
-#define TEMP_LOG_MAX_LOGS ((TEMP_LOG_CAPACITY - TEMP_LOG_START_ADDRESS) / TEMP_LOG_HEADER_SIZE)
-#define TEMP_LOG_MAGIC_WORD 0xBADDCAFE
-
 bool read_data_flag = false;
 tempLogHeader header = {0};
 static uint16_t log_interval = 1; // Default log interval in seconds
