@@ -139,3 +139,16 @@ Stream log files stored
 |Sync bytes|Command|Data Length|Data                                                        |CRC    |
 |----------|-------|-----------|------------------------------------------------------------|-------|
 |0x7E, 0x7E|0x09   |0x08       |[Year] [Month] [Day] [Hour] [Minute] [Second] [Type] [Value]|2 bytes|
+
+## START_NEW_LOG
+Stream log files stored   
+
+**Request**
+|Sync bytes|Command|Data Length|Data      |CRC    |
+|----------|-------|-----------|----------|-------|
+|0x7E, 0x7E|0x0A   |0x00       |NA        |2 bytes|
+
+**Response**
+|Sync bytes|Command|Data Length|Data |CRC    |
+|----------|-------|-----------|-----|-------|
+|0x7E, 0x7E|0x0A   |0x08       |[OK] |2 bytes|

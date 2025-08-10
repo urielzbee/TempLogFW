@@ -91,6 +91,11 @@ uint16_t temperature_logger_controller_get_log_interval(void) {
 	return log_interval;
 }
 
+void temperature_logger_controller_start_new_log(void) {
+	LOG_INF("Starting new log");
+	flash_manager_erase();
+}
+
 static void temperature_logger_controller(void)
 {
     tempLog temperatureLog;
