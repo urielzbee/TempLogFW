@@ -14,7 +14,7 @@ typedef struct
 {
 	uint32_t magicWord;
 	struct rtc_time time;
-	struct sensor_value temp;
+	double temp;
 	uint8_t reserved[12];
 }tempLog;
 
@@ -32,5 +32,6 @@ void temperature_logger_controller_start(void);
 void temperature_logger_controller_stop(void);
 void temperature_logger_controller_set_log_interval(uint16_t interval);
 uint16_t temperature_logger_controller_get_log_interval(void);
+void temperature_logger_controller_start_new_log(void);
 
 #endif
