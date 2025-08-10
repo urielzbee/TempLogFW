@@ -121,27 +121,6 @@ void board_init(void)
 
 }
 
-/*void print_logs(void)
-{
-	tempLog temperatureLog;
-
-	for(uint32_t x = 0; x < TEMP_LOG_MAX_LOGS; x++)
-	{
-		flash_manager_read(flash_dev, (uint8_t *)&temperatureLog, x);
-		if(temperatureLog.magicWord == FLASH_MANAGER_MAGIC_WORD)
-		{
-			LOG_INF("%04d-%02d-%02d %02d:%02d:%02d", temperatureLog.time.tm_year + 1900,
-				temperatureLog.time.tm_mon + 1, temperatureLog.time.tm_mday, temperatureLog.time.tm_hour, temperatureLog.time.tm_min, temperatureLog.time.tm_sec);
-				LOG_INF(", %.2f", sensor_value_to_double(&temperatureLog.temp));
-		}
-		else
-		{
-			LOG_INF(".");
-			break;
-		}
-	}
-}*/
-
 int main(void)
 {
 	int ret;
