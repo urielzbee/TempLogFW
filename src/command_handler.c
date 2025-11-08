@@ -84,11 +84,18 @@ static void command_handler_process(const telemetry_msg *msg)
         LOG_INF("CPU Temp Command");
         break;
     case eTEMP :
-        double temp;
+        struct sensor_value temp;
         sensor_manager_read(&temp);
-        LOG_INF("Temperature Command: %.2f", temp);
-        response_msg.len = 1;
-        response_msg.data[0] = (uint8_t)temp;
+        LOG_INF("Temperature Command: %.2f", sensor_value_to_double(&temp));
+        response_msg.len = 8;
+        response_msg.data[0] = temp.val1 >> 24;
+        response_msg.data[1] = (temp.val1 >> 16) & 0xFF;
+        response_msg.data[2] = (temp.val1 >> 8) & 0xFF;
+        response_msg.data[3] = temp.val1 & 0xFF;
+        response_msg.data[4] = (temp.val2 >> 24) & 0xFF;
+        response_msg.data[5] = (temp.val2 >> 16) & 0xFF;
+        response_msg.data[6] = (temp.val2 >> 8) & 0xFF;
+        response_msg.data[7] = temp.val2 & 0xFF;
 
         break;
     case eSET_LOG_INTERVAL :
@@ -126,7 +133,7 @@ static void stream_logs(void)
     int index = 0;
 
     response_msg.cmd = eSTREAM_LOGS;
-    response_msg.len = 8;
+    response_msg.len = 15;
 
     index = flash_manager_get_index();
 
@@ -142,8 +149,15 @@ static void stream_logs(void)
             response_msg.data[4] = temperatureLog.time.tm_min;
             response_msg.data[5] = temperatureLog.time.tm_sec;
             response_msg.data[6] = 0x00; // Type
-            response_msg.data[7] = (uint8_t)temperatureLog.temp;
-            
+            response_msg.data[7] = temperatureLog.temp.val1 >> 24;
+            response_msg.data[8] = (temperatureLog.temp.val1 >> 16) & 0xFF;
+            response_msg.data[9] = (temperatureLog.temp.val1 >> 8) & 0xFF;
+            response_msg.data[10] = temperatureLog.temp.val1 & 0xFF;
+            response_msg.data[11] = (temperatureLog.temp.val2 >> 24) & 0xFF;
+            response_msg.data[12] = (temperatureLog.temp.val2 >> 16) & 0xFF;
+            response_msg.data[13] = (temperatureLog.temp.val2 >> 8) & 0xFF;
+            response_msg.data[14] = temperatureLog.temp.val2 & 0xFF;
+
             telemetry_service_response(&response_msg);
             k_msleep(50); // Small delay to ensure the message is sent before sending the next one
 		}

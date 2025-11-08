@@ -14,8 +14,7 @@ typedef struct
 {
 	uint32_t magicWord;
 	struct rtc_time time;
-	double temp;
-	uint8_t reserved[4];
+	struct sensor_value temp;
 }tempLog;
 
 #define TEMP_LOG_HEADER_ADDRESS 0x00000000

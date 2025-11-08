@@ -18,10 +18,9 @@ int sensor_manager_init(const struct device * dev)
     return 1;
 }
 
-int sensor_manager_read(double * temp)
+int sensor_manager_read(struct sensor_value * temp)
 {
     int ret;
-    struct sensor_value val;
 	
 	ret = sensor_sample_fetch(temp_dev);
 	if (ret) {
@@ -29,15 +28,13 @@ int sensor_manager_read(double * temp)
 		return 1;
 	}
 
-	ret = sensor_channel_get(temp_dev, SENSOR_CHAN_AMBIENT_TEMP, &val);
+	ret = sensor_channel_get(temp_dev, SENSOR_CHAN_AMBIENT_TEMP, temp);
 	if (ret) {
 		LOG_ERR("sensor_channel_get failed ret %d\n", ret);
 		return 1;
 	}
-	
-    *temp = sensor_value_to_double(&val);
 
-	LOG_INF("Temperature: %.2f C", *temp);	
+	LOG_INF("Temperature: %.2f C", sensor_value_to_double(temp));
 
     return 0;
 }

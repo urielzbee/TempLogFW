@@ -99,7 +99,7 @@ Temperature
 **Response**
 |Sync bytes|Command|Data Length|Data      |CRC    |
 |----------|-------|-----------|----------|-------|
-|0x7E, 0x7E|0x06   |0x01       |[Temp]    |2 bytes|
+|0x7E, 0x7E|0x06   |0x08       |[Temp Integer(4bytes)][Temp Decimal(4bytes)]|2 bytes|
 
 ## SET_LOG_INTERVAL
 Set Logging interval time   
@@ -138,7 +138,7 @@ Stream log files stored
 **Response**
 |Sync bytes|Command|Data Length|Data                                                        |CRC    |
 |----------|-------|-----------|------------------------------------------------------------|-------|
-|0x7E, 0x7E|0x09   |0x08       |[Year] [Month] [Day] [Hour] [Minute] [Second] [Type] [Value]|2 bytes|
+|0x7E, 0x7E|0x09   |0x0F       |[Year] [Month] [Day] [Hour] [Minute] [Second] [Type] [Value]|2 bytes|
 
 ## START_NEW_LOG
 Stream log files stored   
