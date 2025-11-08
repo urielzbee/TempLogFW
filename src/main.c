@@ -128,6 +128,8 @@ int main(void)
 	
 	board_init();
 
+	gpio_pin_set_dt(&led1, 0);
+
 	while (1) {
 		gpio_pin_set_dt(&led0, 1);
 		k_msleep(70);
