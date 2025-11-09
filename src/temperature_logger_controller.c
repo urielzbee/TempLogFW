@@ -4,12 +4,16 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/drivers/gpio.h>
 #include "temperature_logger_controller.h"
 #include "time_service.h"
 #include "sensor_manager.h"
 #include "flash_manager.h"
 
 LOG_MODULE_REGISTER(temp_log_ctl);
+
+#define LED0_NODE DT_ALIAS(led0)
+static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 #define TEMPERATURE_LOGGER_CONTROLLER_STACKSIZE 768
 #define TEMPERATURE_LOGGER_CONTROLLER_PRIORITY 7
@@ -33,6 +37,18 @@ static void time_service_callback(const struct device *dev, uint16_t id, void *u
 
 void temperature_logger_controller_init(void) {
     int ret;
+
+	if (!gpio_is_ready_dt(&led0)) {
+		LOG_ERR("Device is not ready");
+		hard_fault();
+	}
+
+	ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
+	if (ret < 0) {
+		LOG_ERR("Device is not ready");
+	}
+
+	gpio_pin_set_dt(&led0, 0);
 
     temp_log_tid = k_thread_create(
         &temp_log_thread,
@@ -107,12 +123,14 @@ static void temperature_logger_controller(void)
 		if(read_data_flag)
 		{
             LOG_INF("Read data flag set, logging temperature data");
+			gpio_pin_set_dt(&led0, 1);
 			read_data_flag = false;
 			set_next_alarm_time(log_interval);
 			time_service_get_date_time(&temperatureLog.time);
 			sensor_manager_read(&temperatureLog.temp);
 			temperatureLog.magicWord = FLASH_MANAGER_MAGIC_WORD;
 			flash_manager_write(&temperatureLog, sizeof(tempLog));
+			gpio_pin_set_dt(&led0, 0);
 		}
 		k_msleep(1000);
 	}

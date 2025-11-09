@@ -25,7 +25,6 @@ LOG_MODULE_REGISTER(main);
 #define SLEEP_TIME_MS   1000
 
 /* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE DT_ALIAS(led0)
 #define LED1_NODE DT_ALIAS(led1)
 #define BTN1_NODE DT_ALIAS(btn1)
 
@@ -33,7 +32,7 @@ LOG_MODULE_REGISTER(main);
  * A build error on this line means your board is unsupported.
  * See the sample documentation for information on how to fix this.
  */
-static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+
 static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec btn1 = GPIO_DT_SPEC_GET(BTN1_NODE, gpios);
 
@@ -62,10 +61,6 @@ void board_init(void)
 {
 	int ret;
 
-	if (!gpio_is_ready_dt(&led0)) {
-		LOG_ERR("Device is not ready");
-		hard_fault();
-	}
 	if (!gpio_is_ready_dt(&led1)) {
 		LOG_ERR("Device is not ready");
 		hard_fault();
@@ -77,12 +72,6 @@ void board_init(void)
 
 	if (!device_is_ready(mco)) {
 		LOG_ERR("MCO1 device not ready");
-		hard_fault();
-	}
-
-	ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
-	if (ret < 0) {
-		LOG_ERR("Device is not ready");
 		hard_fault();
 	}
 
@@ -131,9 +120,6 @@ int main(void)
 	gpio_pin_set_dt(&led1, 0);
 
 	while (1) {
-		gpio_pin_set_dt(&led0, 1);
-		k_msleep(70);
-		gpio_pin_set_dt(&led0, 0);
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
