@@ -24,6 +24,8 @@ int flash_manager_erase(void);
 int flash_manager_write(uint8_t *  data, uint32_t len);
 int flash_manager_read(uint8_t *  data, uint32_t index);
 int flash_manager_get_index(void);
+int flash_manager_suspend(void);
+int flash_manager_resume(void);
 
 
 #endif

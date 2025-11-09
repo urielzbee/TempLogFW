@@ -123,6 +123,7 @@ static void temperature_logger_controller(void)
 		if(read_data_flag)
 		{
             LOG_INF("Read data flag set, logging temperature data");
+			flash_manager_resume();
 			gpio_pin_set_dt(&led0, 1);
 			read_data_flag = false;
 			set_next_alarm_time(log_interval);
@@ -130,6 +131,7 @@ static void temperature_logger_controller(void)
 			sensor_manager_read(&temperatureLog.temp);
 			temperatureLog.magicWord = FLASH_MANAGER_MAGIC_WORD;
 			flash_manager_write(&temperatureLog, sizeof(tempLog));
+			flash_manager_suspend();
 			gpio_pin_set_dt(&led0, 0);
 		}
 		k_msleep(1000);

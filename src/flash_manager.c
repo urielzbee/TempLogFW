@@ -2,7 +2,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
-
+#include <zephyr/pm/device.h>
 #include <zephyr/drivers/flash.h>
 
 LOG_MODULE_REGISTER(flash_manager);
@@ -98,4 +98,26 @@ int flash_manager_get_index(void)
     /* Read current flash manager header index */
     flash_read(flash_dev, FLASH_MANAGER_HEADER_ADDRESS, &header, FLASH_MANAGER_HEADER_SIZE);
     return header.index;
+}
+
+int flash_manager_suspend(void)
+{
+    int ret;
+    ret = pm_device_action_run(flash_dev, PM_DEVICE_ACTION_SUSPEND);
+    if (ret < 0)
+    {
+        LOG_ERR("Unable to suspend SPI NOR flash. (err: %d)", ret);
+        return ret;
+    }
+    return 0;
+}
+int flash_manager_resume(void)
+{
+    int ret;
+    ret = pm_device_action_run(flash_dev, PM_DEVICE_ACTION_RESUME);
+    if (ret < 0)
+    {
+        LOG_ERR("Unable to resume SPI NOR flash. (err: %d)", ret);
+        return ret;
+    }
 }
